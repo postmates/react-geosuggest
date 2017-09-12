@@ -4,6 +4,7 @@
  */
 export default {
   fixtures: [],
+  maxFixtures: 10,
   initialValue: '',
   placeholder: 'Search places',
   disabled: false,
@@ -16,9 +17,11 @@ export default {
   types: null,
   queryDelay: 250,
   googleMaps: null,
+  highlightMatch: true,
   onActivateSuggest: () => {},
   onSuggestSelect: () => {},
   onSuggestNoResults: () => {},
+  onUpdateSuggests: () => {},
   onFocus: () => {},
   onBlur: () => {},
   onChange: () => {},
@@ -31,5 +34,6 @@ export default {
     'suggests': {},
     'suggestItem': {}
   },
-  ignoreTab: false
+  ignoreTab: false,
+  minLength: 1
 };

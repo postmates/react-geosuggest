@@ -1,6 +1,6 @@
 import React from 'react'; // eslint-disable-line no-unused-vars
 import {expect} from 'chai';
-import TestUtils from 'react-addons-test-utils';
+import TestUtils from 'react-dom/test-utils';
 import sinon from 'sinon';
 import googleStub from './google_stub';
 import Geosuggest from '../src/Geosuggest';
@@ -13,6 +13,7 @@ describe('Component: Geosuggest', () => {
     onActivateSuggest = null,
     onSuggestNoResults = null,
     onFocus = null,
+    onKeyDown = null,
     onKeyPress = null,
     onChange = null,
     onBlur = null,
@@ -22,6 +23,7 @@ describe('Component: Geosuggest', () => {
       onSuggestNoResults = sinon.spy();
       onChange = sinon.spy();
       onFocus = sinon.spy();
+      onKeyDown = sinon.spy();
       onKeyPress = sinon.spy();
       onBlur = sinon.spy();
 
@@ -34,6 +36,7 @@ describe('Component: Geosuggest', () => {
           onSuggestNoResults={onSuggestNoResults}
           onChange={onChange}
           onFocus={onFocus}
+          onKeyDown={onKeyDown}
           onKeyPress={onKeyPress}
           onBlur={onBlur}
           style={{
@@ -148,6 +151,12 @@ describe('Component: Geosuggest', () => {
     it('should call `onChange` when the update method is called', () => {
       component.update('New');
       expect(onChange.withArgs('New').calledOnce).to.be.true; // eslint-disable-line no-unused-expressions, max-len
+    });
+
+    it('should call `onKeyDown` when we key press in the input', () => {
+      const geoSuggestInput = TestUtils.findRenderedDOMComponentWithClass(component, 'geosuggest__input'); // eslint-disable-line max-len
+      TestUtils.Simulate.keyDown(geoSuggestInput);
+      expect(onKeyDown.calledOnce).to.be.true; // eslint-disable-line no-unused-expressions, max-len
     });
 
     it('should call `onKeyPress` when we key press in the input', () => {
@@ -282,7 +291,7 @@ describe('Component: Geosuggest', () => {
     });
 
     it('should call `onSuggestNoResults` when there are no suggestions', () => {
-      const input = component.refs.input,
+      const input = component.input,
         geoSuggestInput = TestUtils.findRenderedDOMComponentWithClass(component, 'geosuggest__input'); // eslint-disable-line max-len
 
       input.value = 'There is no result for this. Really.';
@@ -392,6 +401,15 @@ describe('Component: Geosuggest', () => {
       });
 
       expect(suggest.classList.contains('geosuggest__suggests--hidden')).to.be.false; // eslint-disable-line no-unused-expressions, max-len
+    });
+
+    it('should show a maximum of `maxFixtures` fixtures', () => {
+      render({maxFixtures: 2, fixtures});
+      const geoSuggestInput = TestUtils.findRenderedDOMComponentWithClass(component, 'geosuggest__input'); // eslint-disable-line max-len
+      TestUtils.Simulate.focus(geoSuggestInput);
+
+      const suggestItems = TestUtils.scryRenderedDOMComponentsWithClass(component, 'geosuggest__item'); // eslint-disable-line max-len, one-var
+      expect(suggestItems.length).to.equal(2);
     });
   });
 
@@ -531,6 +549,25 @@ describe('Component: Geosuggest', () => {
     });
   });
 
+  describe('with onUpdateSuggests', () => {
+    const props = {
+      onUpdateSuggests: sinon.spy()
+    };
+
+    beforeEach(() => render(props));
+
+    it('should call onUpdateSuggests when input onChange is triggered', () => { // eslint-disable-line max-len
+      const geoSuggestInput = TestUtils.findRenderedDOMComponentWithClass(component, 'geosuggest__input'); // eslint-disable-line
+      geoSuggestInput.value = 'New York City';
+      TestUtils.Simulate.change(geoSuggestInput);
+
+      setImmediate(() => {
+        expect(props.onUpdateSuggests.calledOnce).to.be.true; // eslint-disable-line no-unused-expressions, max-len
+        done(); // eslint-disable-line
+      });
+    });
+  });
+
   describe('with renderSuggestItem with custom fixture attributes', () => {
     const fixtures = [
         {label: 'New York', location: {lat: 40.7033127, lng: -73.979681}, firstName: 'John'} // eslint-disable-line max-len
@@ -556,6 +593,83 @@ describe('Component: Geosuggest', () => {
 
       expect(wrapper).to.exist; // eslint-disable-line no-unused-expressions
       expect(innerContent).to.exist; // eslint-disable-line no-unused-expressions, max-len
+    });
+  });
+
+  describe('with highLightMatch', () => { // eslint-disable-line max-len
+    const props = {
+      suggestsClassName: 'suggests-class'
+    };
+
+    beforeEach(() => render(props));
+
+    it('should highlight matched text', () => { // eslint-disable-line max-len
+      const geoSuggestInput = TestUtils.findRenderedDOMComponentWithClass(component, 'geosuggest__input'); // eslint-disable-line max-len
+      geoSuggestInput.value = 'New';
+      TestUtils.Simulate.change(geoSuggestInput);
+      TestUtils.Simulate.focus(geoSuggestInput);
+      let matchedText = TestUtils.scryRenderedDOMComponentsWithClass(component, 'geosuggest__item__matched-text'); // eslint-disable-line max-len
+      expect(matchedText).to.have.length.of.at.least(1); // eslint-disable-line max-len
+    });
+  });
+
+  describe('with highLightMatch', () => { // eslint-disable-line max-len
+    const props = {
+      suggestsClassName: 'suggests-class'
+    };
+
+    beforeEach(() => render(props));
+    it('should render a match with minial nodes', () => { // eslint-disable-line max-len
+      const geoSuggestInput = TestUtils.findRenderedDOMComponentWithClass(component, 'geosuggest__input'); // eslint-disable-line max-len
+      geoSuggestInput.value = 'Newa';
+      TestUtils.Simulate.change(geoSuggestInput);
+      TestUtils.Simulate.focus(geoSuggestInput);
+
+      const geoSuggestItems = TestUtils.scryRenderedDOMComponentsWithClass(component, 'geosuggest__item'); // eslint-disable-line max-len, one-var
+      expect(geoSuggestItems).to.have.length.of(1);
+      expect(geoSuggestItems[0].childNodes).to.have.length.of(1);
+      expect(geoSuggestItems[0].childNodes[0].childNodes).to.have.length.of(6);
+    });
+  });
+
+  describe('with minLength', () => {
+    it('should not search for predictions when the input value is less than the minLength', () => { // eslint-disable-line max-len
+      const props = {
+        minLength: 5
+      };
+      render(props);
+
+      const geoSuggestInput = TestUtils.findRenderedDOMComponentWithClass(component, 'geosuggest__input'); // eslint-disable-line max-len, one-var
+      geoSuggestInput.value = 'New';
+      TestUtils.Simulate.change(geoSuggestInput);
+      TestUtils.Simulate.focus(geoSuggestInput);
+      let matchedText = TestUtils.scryRenderedDOMComponentsWithClass(component, 'geosuggest__item__matched-text'); // eslint-disable-line max-len
+      expect(matchedText).to.have.length.of(0); // eslint-disable-line max-len
+    });
+
+    it('should search for predictions when the input value is one character and minLength prop was not specified', () => { // eslint-disable-line max-len
+      render();
+
+      const geoSuggestInput = TestUtils.findRenderedDOMComponentWithClass(component, 'geosuggest__input'); // eslint-disable-line max-len, one-var
+      geoSuggestInput.value = 'New';
+      TestUtils.Simulate.change(geoSuggestInput);
+      TestUtils.Simulate.focus(geoSuggestInput);
+      let matchedText = TestUtils.scryRenderedDOMComponentsWithClass(component, 'geosuggest__item__matched-text'); // eslint-disable-line max-len
+      expect(matchedText).to.have.length.of.at.least(1); // eslint-disable-line max-len
+    });
+
+    it('should search for predictions when the input value is greater than the minLength prop specified', () => { // eslint-disable-line max-len
+      const props = {
+        minLength: 3
+      };
+      render(props);
+
+      const geoSuggestInput = TestUtils.findRenderedDOMComponentWithClass(component, 'geosuggest__input'); // eslint-disable-line max-len, one-var
+      geoSuggestInput.value = 'New York';
+      TestUtils.Simulate.change(geoSuggestInput);
+      TestUtils.Simulate.focus(geoSuggestInput);
+      let matchedText = TestUtils.scryRenderedDOMComponentsWithClass(component, 'geosuggest__item__matched-text'); // eslint-disable-line max-len
+      expect(matchedText).to.have.length.of.at.least(1); // eslint-disable-line max-len
     });
   });
 });
