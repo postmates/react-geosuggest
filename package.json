@@ -1,6 +1,6 @@
 {
   "name": "@postmates/react-geosuggest",
-  "version": "2.6.0",
+  "version": "2.6.1",
   "description": "A React autosuggest for the Google Maps Places API.",
   "main": "module/Geosuggest.js",
   "author": "Robert Katzki <katzki@ubilabs.net>",
